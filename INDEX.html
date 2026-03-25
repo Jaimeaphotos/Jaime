@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jaime A. Photography</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Josefin+Sans:wght@300;400&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f5f3ef;
+      --text: #1a1a18;
+      --accent: #8b4a2e;
+      --muted: #9a9588;
+      --line: #d5d1c8;
+      --text-body-color: #4a4640;
+      --statement-text-color: #545048;
+    }
+
+    :root:has(#theme-toggle:checked) {
+      --bg: #111110;
+      --text: #e8e5df;
+      --accent: #c47a50;
+      --muted: #6b6760;
+      --line: #2e2c28;
+      --text-body-color: #a8a39a;
+      --statement-text-color: #9a9590;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'EB Garamond', serif;
+      background: #111;
+    }
+
+    /* ── Gallery ── */
+    .gallery {
+      width: 100%;
+      height: 100%;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .gallery::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* ── Slide ── */
+    .slide {
+      width: 100%;
+      height: 100vh;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    /* ── Photo placeholder ── */
+    .slide-bg {
+      position: absolute;
+      inset: 0;
+      transform: scale(1.04) translateY(6px);
+      filter: brightness(.72) saturate(.75);
+      transition: transform 2s cubic-bezier(.16, 1, .3, 1), filter 1.8s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .slide:target .slide-bg,
+    .slide:hover .slide-bg {
+      transform: scale(1) translateY(0);
+      filter: brightness(.9) saturate(1);
+    }
+
+    /* ── Slide real photo ── */
+    .slide-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+    }
+
+    /* ── Intro slide ── */
+    .slide-intro {
+      background: var(--bg);
+    }
+
+    .intro-content {
+      position: relative;
+      z-index: 10;
+      padding: 0 3.5rem 5rem;
+      width: 100%;
+    }
+
+    .intro-eyebrow {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 400;
+      font-size: 1.2rem;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+      margin-bottom: 1.2rem;
+      opacity: 0;
+      transform: translateY(18px);
+      animation: fadeUp .9s .5s forwards;
+    }
+
+    .intro-logo {
+      width: clamp(100px, 15vw, 240px);
+      height: auto;
+      display: block;
+      opacity: 0;
+      transform: translateY(22px);
+      animation: fadeUp .9s .2s forwards;
+      /* Invert logo colour to match current theme */
+      filter: var(--logo-filter, none);
+    }
+
+    :root:has(#theme-toggle:checked) .intro-logo {
+      filter: invert(1) brightness(1.05);
+    }
+
+    .intro-hint {
+      position: absolute;
+      right: 3.5rem;
+      bottom: 8.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .6rem;
+      opacity: 0;
+      animation: fadeIn .8s 1.6s forwards;
+    }
+
+    .intro-hint span {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 400;
+      font-size: 0.95rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+      writing-mode: vertical-rl;
+    }
+
+    .hint-line {
+      width: 2px;
+      height: 65px;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+      animation: pulse 2.2s 2s infinite;
+    }
+
+    /* ── Caption ── */
+    .slide-caption {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      padding: 7rem 3.5rem 3rem;
+      background: linear-gradient(to top, rgba(4, 3, 2, .84) 0%, transparent 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .caption-tag {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .6rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, .55);
+      margin-bottom: .5rem;
+    }
+
+    .caption-title {
+      font-size: clamp(2.2rem, 4.5vw, 4rem);
+      font-style: italic;
+      font-weight: 400;
+      color: #fff;
+      line-height: 1.0;
+    }
+
+    .view-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .8rem;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .65rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: #fff;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 255, 255, .35);
+      padding-bottom: .35rem;
+      white-space: nowrap;
+      transition: gap .3s ease, border-color .3s ease;
+    }
+
+    .view-btn:hover {
+      gap: 1.3rem;
+      border-color: var(--accent);
+    }
+
+    .view-btn::after {
+      content: '→';
+      color: var(--accent);
+    }
+
+    /* ── Dot nav ── */
+    .dot-nav {
+      position: fixed;
+      top: 50%;
+      left: 2.2rem;
+      transform: translateY(-50%);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .35);
+      transition: height .4s cubic-bezier(.16, 1, .3, 1), background .4s ease, border-radius .4s ease;
+      cursor: pointer;
+    }
+
+    .dot:target,
+    .dot:hover,
+    .dot:active {
+      height: 22px;
+      border-radius: 2px;
+      background: #fff;
+    }
+
+    .dot-nav.dark-dots .dot {
+      background: rgba(0, 0, 0, .25);
+    }
+
+    .dot-nav.dark-dots .dot:target,
+    .dot-nav.dark-dots .dot:hover {
+      background: var(--text);
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2.5rem 3.5rem;
+      padding-bottom: 5rem;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 45%, transparent 100%);
+    }
+
+    .nav-logo {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      font-size: .72rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: #fff;
+      text-decoration: none;
+      pointer-events: all;
+      transition: color .4s ease;
+    }
+
+    .menu-btn {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      padding: 4px;
+      pointer-events: all;
+      cursor: pointer;
+    }
+
+    .menu-btn span {
+      display: block;
+      width: 26px;
+      height: 1px;
+      background: #fff;
+      transition: transform .4s ease, opacity .3s ease, background .4s ease;
+      transform-origin: center;
+    }
+
+    #menu-toggle:checked~.gallery nav .menu-btn span:nth-child(1) {
+      transform: translateY(6px) rotate(45deg);
+    }
+
+    #menu-toggle:checked~.gallery nav .menu-btn span:nth-child(2) {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+
+    #menu-toggle:checked~.gallery nav .menu-btn span:nth-child(3) {
+      transform: translateY(-6px) rotate(-45deg);
+    }
+
+    /* ── Menu overlay ── */
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--text);
+      z-index: 400;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 6rem 10vw;
+      clip-path: circle(0% at calc(100% - 3.5rem) 3.5rem);
+      transition: clip-path .7s cubic-bezier(.77, 0, .175, 1);
+      pointer-events: none;
+    }
+
+    #menu-toggle:checked~.menu-overlay {
+      clip-path: circle(150% at calc(100% - 3.5rem) 3.5rem);
+      pointer-events: all;
+    }
+
+    .menu-overlay ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: .1rem;
+    }
+
+    .menu-overlay ul li {
+      overflow: hidden;
+    }
+
+    .menu-overlay ul li a {
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 400;
+      font-style: italic;
+      color: var(--bg);
+      text-decoration: none;
+      display: inline-block;
+      transform: translateY(105%);
+      transition: transform .6s cubic-bezier(.77, 0, .175, 1), color .3s;
+      line-height: 1.1;
+    }
+
+    .menu-overlay ul li a:hover {
+      color: var(--accent);
+    }
+
+    #menu-toggle:checked~.menu-overlay ul li a {
+      transform: translateY(0);
+    }
+
+    #menu-toggle:checked~.menu-overlay ul li:nth-child(1) a {
+      transition-delay: .12s;
+    }
+
+    #menu-toggle:checked~.menu-overlay ul li:nth-child(2) a {
+      transition-delay: .19s;
+    }
+
+    #menu-toggle:checked~.menu-overlay ul li:nth-child(3) a {
+      transition-delay: .26s;
+    }
+
+    .menu-footer {
+      position: absolute;
+      bottom: 3rem;
+      left: 10vw;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .65rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity .4s .5s;
+    }
+
+    #menu-toggle:checked~.menu-overlay .menu-footer {
+      opacity: 1;
+    }
+
+    /* ── Text slides ── */
+    .slide-text {
+      background: var(--bg);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .text-inner {
+      max-width: 660px;
+      padding: 3rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .text-label {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .62rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 1.5rem;
+    }
+
+    .text-body {
+      font-size: 1.2rem;
+      line-height: 1.9;
+      color: var(--text-body-color);
+      margin-bottom: 3rem;
+    }
+
+    .contact-link {
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      font-style: italic;
+      color: var(--text);
+      text-decoration: none;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: .3rem;
+      display: inline-block;
+      transition: border-color .3s, color .3s;
+    }
+
+    .contact-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Project overlay ── */
+    .project-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 800;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .55s cubic-bezier(.16, 1, .3, 1);
+      overflow-y: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .project-overlay::-webkit-scrollbar {
+      display: none;
+    }
+
+    .project-overlay:target {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .overlay-bar {
+      height: 1px;
+      background: var(--line);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .7s .3s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .project-overlay:target .overlay-bar {
+      transform: scaleX(1);
+    }
+
+    .overlay-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 2.2rem 3.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .overlay-meta {
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+    }
+
+    .overlay-tag {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .6rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: opacity .5s .25s ease, transform .5s .25s ease;
+    }
+
+    .overlay-title {
+      font-size: clamp(1.8rem, 3.5vw, 3rem);
+      font-style: italic;
+      font-weight: 400;
+      line-height: 1.0;
+      color: var(--text);
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: opacity .5s .35s ease, transform .5s .35s ease;
+    }
+
+    .overlay-year {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .6rem;
+      letter-spacing: .18em;
+      color: var(--muted);
+      opacity: 0;
+      transform: translateX(-6px);
+      transition: opacity .5s .42s ease, transform .5s .42s ease;
+    }
+
+    .project-overlay:target .overlay-tag,
+    .project-overlay:target .overlay-title,
+    .project-overlay:target .overlay-year {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .overlay-close {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+      opacity: 0;
+      transition: opacity .4s .5s ease;
+    }
+
+    .project-overlay:target .overlay-close {
+      opacity: 1;
+    }
+
+    .overlay-close span {
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--text);
+      transform-origin: center;
+    }
+
+    .overlay-close span:nth-child(1) {
+      transform: translateY(3px) rotate(45deg);
+    }
+
+    .overlay-close span:nth-child(2) {
+      transform: translateY(-3px) rotate(-45deg);
+    }
+
+    .overlay-body {
+      flex: none;
+    }
+
+    .overlay-statement {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
+      padding: 3rem 3.5rem 2.5rem;
+      border-bottom: 1px solid var(--line);
+      max-height: 420px;
+      overflow: hidden;
+      transition: max-height .6s cubic-bezier(.22, 1, .36, 1),
+        opacity .5s cubic-bezier(.22, 1, .36, 1),
+        padding .5s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    .overlay-statement.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-bottom-color: transparent;
+    }
+
+    .statement-text {
+      font-size: 1.05rem;
+      line-height: 1.85;
+      color: var(--statement-text-color);
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity .6s .4s ease, transform .6s .4s ease;
+    }
+
+    .project-overlay:target .statement-text {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .statement-hint {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      margin-top: 1.8rem;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .58rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity .5s .7s ease;
+    }
+
+    .statement-hint-line {
+      width: 28px;
+      height: 1px;
+      background: var(--muted);
+      animation: hintPulse 2s 2s infinite;
+    }
+
+    .project-overlay:target .statement-hint {
+      opacity: 1;
+    }
+
+    .project-overlay:not(:target) .overlay-statement .statement-hint {
+      opacity: 0;
+    }
+
+    .overlay-photos {
+      padding: 2rem 2rem 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .overlay-photo {
+      width: 100%;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+
+    .overlay-photo.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .overlay-photo:nth-child(2) {
+      transition-delay: .1s;
+    }
+
+    .overlay-photo:nth-child(3) {
+      transition-delay: .2s;
+    }
+
+    .overlay-photo:nth-child(4) {
+      transition-delay: .3s;
+    }
+
+
+
+    /* ── Noise ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1001;
+      opacity: .022;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 150px;
+    }
+
+    /* ── Keyframes ── */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(22px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: .35;
+        transform: scaleY(1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scaleY(1.38);
+      }
+    }
+
+    @keyframes hintPulse {
+
+      0%,
+      100% {
+        opacity: .4;
+        transform: scaleX(1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scaleX(1.25);
+      }
+    }
+
+    /* ── Dark mode toggle ── */
+    .theme-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      width: 44px;
+      height: 24px;
+      pointer-events: all;
+      cursor: pointer;
+      position: relative;
+      transition: border-color .3s ease, background .3s ease;
+      flex-shrink: 0;
+    }
+
+    .theme-btn-track {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--text);
+      transform: translateX(-6px);
+      transition: transform .35s cubic-bezier(.16, 1, .3, 1), background .3s ease;
+    }
+
+    :root:has(#theme-toggle:checked) .theme-btn-track {
+      transform: translateX(6px);
+    }
+
+    nav.light .theme-btn {
+      border-color: rgba(255, 255, 255, .35);
+    }
+
+    nav.light .theme-btn-track {
+      background: #fff;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .slide-caption {
+        padding: 4rem 1.8rem 2rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .intro-content {
+        padding: 0 1.8rem 3.5rem;
+      }
+
+      .overlay-header {
+        padding: 1.8rem;
+      }
+
+      .overlay-statement {
+        padding: 2rem 1.8rem;
+      }
+
+      nav {
+        padding: 1.4rem 1.8rem;
+      }
+
+      .dot-nav {
+        left: 1rem;
+      }
+    }
+
+    .site-footer {
+      position: fixed;
+      bottom: 2rem;
+      left: 3.5rem;
+      z-index: 50;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: .62rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+      .site-footer {
+        left: 1.5rem;
+        bottom: 1.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <input type="checkbox" id="theme-toggle" hidden>
+  <input type="checkbox" id="menu-toggle" hidden>
+
+  <div class="site-footer editable" data-editable="text">© 2026 Jaime Marín</div>
+
+
+  <!-- Menu overlay -->
+  <div class="menu-overlay" id="menuOverlay">
+    <ul>
+      <li><a href="#slide-1" id="menuWork" style="display:block; text-decoration:none;"><label for="menu-toggle"
+            style="cursor:pointer; display:block;">Work</label></a></li>
+      <li><a href="#slide-11" id="menuInfo" style="display:block; text-decoration:none;"><label for="menu-toggle"
+            style="cursor:pointer; display:block;">Info</label></a></li>
+      <li><a href="#slide-12" id="menuContact" style="display:block; text-decoration:none;"><label for="menu-toggle"
+            style="cursor:pointer; display:block;">Contact</label></a></li>
+    </ul>
+    <div class="menu-footer editable" data-editable="text">© 2026 Jaime Marín</div>
+  </div>
+
+  <!-- Dot nav -->
+  <div class="dot-nav" id="dotNav">
+    <a href="#slide-0" class="dot" id="dot-0"></a>
+    <a href="#slide-1" class="dot" id="dot-1"></a>
+    <a href="#slide-2" class="dot" id="dot-2"></a>
+    <a href="#slide-3" class="dot" id="dot-3"></a>
+    <a href="#slide-4" class="dot" id="dot-4"></a>
+    <a href="#slide-5" class="dot" id="dot-5"></a>
+    <a href="#slide-6" class="dot" id="dot-6"></a>
+    <a href="#slide-7" class="dot" id="dot-7"></a>
+    <a href="#slide-8" class="dot" id="dot-8"></a>
+    <a href="#slide-9" class="dot" id="dot-9"></a>
+    <a href="#slide-10" class="dot" id="dot-10"></a>
+    <a href="#slide-11" class="dot" id="dot-11"></a>
+    <a href="#slide-12" class="dot" id="dot-12"></a>
+  </div>
+
+  <!-- Gallery -->
+  <div class="gallery" id="gallery" style="position: relative;">
+
+    <!-- Nav -->
+    <nav id="mainNav">
+      <a href="#slide-0" class="nav-logo" id="navLogoText"
+        style="flex: 1; text-align: left; pointer-events: all; outline: none;">Jaime A. Photography</a>
+
+      <a href="#slide-0" class="nav-logo" id="navLogo"
+        style="flex: 0 0 auto; display: block; text-align: center; pointer-events: all; outline: none;">
+        <img src="SVG/Logo JA.svg" alt="Jaime A. Photography"
+          style="height: 115px; width: auto; filter: invert(1) brightness(1.05); vertical-align: middle;">
+      </a>
+
+      <div class="nav-right" style="flex: 1; display: flex; justify-content: flex-end; gap: 1rem; align-items: center;">
+        <label for="theme-toggle" class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">
+          <div class="theme-btn-track"></div>
+        </label>
+        <label for="menu-toggle" class="menu-btn" id="menuBtn" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </label>
+      </div>
+    </nav>
+
+    <!-- 0 · Intro -->
+    <div id="slide-0" class="slide slide-intro" data-index="0">
+      <div class="slide-bg">
+        <img id="introImage" class="slide-photo" src="Fotos/Fashion/Image8web.jpg" alt="Intro Background"
+          style="object-fit: cover !important;">
+        <script>
+          (function() {
+            var horizontalPhotos = [
+              "Fotos/Fashion/Image8web.jpg",
+              "Fotos/Image15web.jpg",
+              "Fotos/_Image1Web.jpg",
+              "Fotos/_Image3Web.jpg"
+            ];
+            var randomPhoto = horizontalPhotos[Math.floor(Math.random() * horizontalPhotos.length)];
+            document.getElementById('introImage').src = randomPhoto;
+          })();
+        </script>
+      </div>
+      <div class="intro-content">
+        <p class="intro-eyebrow editable" data-editable="text"
+          style="font-size: 2.8rem; font-weight: 300; letter-spacing: 0.25em;">2026</p>
+      </div>
+      <div class="intro-hint">
+        <div class="hint-line"></div>
+        <span>Scroll</span>
+      </div>
+    </div>
+
+    <!-- 1 · Fashion -->
+    <div id="slide-1" class="slide" data-index="1" data-title="Fashion" data-tag="Photography" data-year="2026"
+      data-statement="Fashion shoots from various campaigns."
+      data-photos="Fotos/Fashion/Image8web.jpg,Fotos/Fashion/Image9web.jpg,Fotos/Fashion/_Image12web.jpg">
+      <div class="slide-bg">
+        <img class="slide-photo" src="Fotos/Fashion/Image8web.jpg" alt="Fashion – Photography">
+      </div>
+      <div class="slide-caption">
+        <div>
+          <p class="caption-tag editable" data-editable="text">Photography</p>
+          <h2 class="caption-title editable" data-editable="text">Fashion</h2>
+        </div>
+        <a href="#project-1" class="view-btn" data-slide="1">View Project</a>
+      </div>
+    </div>
+
+    <!-- 2 · Product -->
+    <div id="slide-2" class="slide" data-index="2" data-title="Product" data-tag="Commercial" data-year="2026"
+      data-statement="Commercial product work featuring independent studios and fashion labels."
+      data-photos="Fotos/Product/Image16web.jpg,Fotos/Product/_Image14web.jpg,Fotos/Product/_Image18web.jpg,Fotos/Product/image17web.jpg">
+      <div class="slide-bg">
+        <img class="slide-photo" src="Fotos/Product/Image16web.jpg" alt="Product – Commercial">
+      </div>
+      <div class="slide-caption">
+        <div>
+          <p class="caption-tag editable" data-editable="text">Commercial</p>
+          <h2 class="caption-title editable" data-editable="text">Product</h2>
+        </div>
+        <a href="#project-2" class="view-btn" data-slide="2">View Project</a>
+      </div>
+    </div>
+
+    <!-- 3 · Portrait 1 -->
+    <div id="slide-3" class="slide" data-index="3" data-title="Portrait 1" data-tag="Portrait Photography"
+      data-year="2026" data-statement="Portraits exploring identity and how people choose to be seen."
+      data-photos="Fotos/Protrait 1/Image7web.jpg,Fotos/Protrait 1/image6.jpg">
+      <div class="slide-bg">
+        <img class="slide-photo" src="Fotos/Protrait 1/Image7web.jpg" alt="Portrait 1 – Portrait Photography">
+      </div>
+      <div class="slide-caption">
+        <div>
+          <p class="caption-tag editable" data-editable="text">Portrait Photography</p>
+          <h2 class="caption-title editable" data-editable="text">Portrait 1</h2>
+        </div>
+        <a href="#project-3" class="view-btn" data-slide="3">View Project</a>
+      </div>
+    </div>
+
+    <!-- 4 · Editorial -->
+    <div id="slide-4" class="slide" data-index="4" data-title="Editorial" data-tag="Portfolio" data-year="2026"
+      data-statement="Single photo from the portfolio." data-photos="Fotos/_Image1Web.jpg">
+      <div class="slide-bg">
+        <img class="slide-photo" src="Fotos/_Image1Web.jpg" alt="Portfolio Image">
+      </div>
+      <div class="slide-caption">
+        <div>
+          <p class="caption-tag editable" data-editable="text">Portfolio</p>
+          <h2 class="caption-title editable" data-editable="text">Editorial</h2>
+        </div>
+        <a href="#project-4" class="view-btn" data-slide="4">View Project</a>
+      </div>
+    </div>
+
+    <!-- 5 · Still Life -->
+    <div id="slide-5" class="slide" data-index="5" data-title="Still Life" data-tag="Portfolio" data-year="2026"
+      data-statement="Single photo from the portfolio." data-photos="Fotos/_Image3Web.jpg">
+      <div class="slide-bg">
+        <img class="slide-photo" src="Fotos/_Image3Web.jpg" alt="Portfolio Image">
+      </div>
+      <div class="slide-caption">
+        <div>
+          <p class="caption-tag editable" data-editable="text">Portfolio</p>
+          <h2 class="caption-title editable" data-editable="text">Still Life</h2>
+        </div>
+        <a href="#project-5" class="view-btn" data-slide="5">View Project</a>
+      </div>
+    </div>
+
+    <!-- 6 · Urban Focus -->
+    <div id="slide-6" class="slide" data-index="6" data-title="Urban Focus" data-tag="Portfolio" data-year="2026"
+      data-statement="Single photo from the portfolio." data-photos="Fotos/Imagen4Web.jpg">
+      <div class="slide-bg">
+        <img class="slide-photo" src="Fotos/Imagen4Web.jpg" alt="Portfolio Image">
+      </div>
+      <div class="slide-caption">
+        <div>
+          <p class="caption-tag editable" data-editable="text">Portfolio</p>
+          <h2 class="caption-title editable" data-editable="text">Urban Focus</h2>
+        </div>
+        <a href="#project-6" class="view-btn" data-slide="6">View Project</a>
+      </div>
+    </div>
+
+    <!-- 7 · Studio Session -->
+    <div id="slide-7" class="slide" data-index="7" data-title="Studio Session" data-tag="Portfolio" data-year="2026"
+      data-statement="Single photo from the portfolio." data-photos="Fotos/Image11web.jpg">
+      <div class="slide-bg">
+        <img class="slide-photo" src="Fotos/Image11web.jpg" alt="Portfolio Image">
+      </div>
+      <div class="slide-caption">
+        <div>
+          <p class="caption-tag editable" data-editable="text">Portfolio</p>
+          <h2 class="caption-title editable" data-editable="text">Studio Session</h2>
+        </div>
+        <a href="#project-7" class="view-btn" data-slide="7">View Project</a>
+      </div>
+    </div>
+
+    <!-- 8 · Vivid Neon -->
+    <div id="slide-8" class="slide" data-index="8" data-title="Vivid Neon" data-tag="Portfolio" data-year="2026"
+      data-statement="Single photo from the portfolio." data-photos="Fotos/_Image13web.jpg">
+      <div class="slide-bg">
+        <img class="slide-photo" src="Fotos/_Image13web.jpg" alt="Portfolio Image">
+      </div>
+      <div class="slide-caption">
+        <div>
+          <p class="caption-tag editable" data-editable="text">Portfolio</p>
+          <h2 class="caption-title editable" data-editable="text">Vivid Neon</h2>
+        </div>
+        <a href="#project-8" class="view-btn" data-slide="8">View Project</a>
+      </div>
+    </div>
+
+    <!-- 9 · Golden Hour -->
+    <div id="slide-9" class="slide" data-index="9" data-title="Golden Hour" data-tag="Portfolio" data-year="2026"
+      data-statement="Single photo from the portfolio." data-photos="Fotos/Image15web.jpg">
+      <div class="slide-bg">
+        <img class="slide-photo" src="Fotos/Image15web.jpg" alt="Portfolio Image">
+      </div>
+      <div class="slide-caption">
+        <div>
+          <p class="caption-tag editable" data-editable="text">Portfolio</p>
+          <h2 class="caption-title editable" data-editable="text">Golden Hour</h2>
+        </div>
+        <a href="#project-9" class="view-btn" data-slide="9">View Project</a>
+      </div>
+    </div>
+
+    <!-- 10 · About -->
+    <div id="slide-10" class="slide slide-text" data-index="10">
+      <div class="text-inner">
+        <p class="text-label editable" data-editable="text">About</p>
+        <p class="text-body editable" data-editable="source">My mission is to deliver high‑quality product, food,
+          lifestyle, and portrait photography
+          for clients who value clean, expressive visuals. I focus on technical precision, strong colour, and clear
+          creative direction. My bilingual and cultural sensitivity helps me create images that feel both professional
+          and emotionally engaging.</p>
+      </div>
+    </div>
+
+    <!-- 11 · Biography -->
+    <div id="slide-11" class="slide slide-text" data-index="11">
+      <div class="text-inner" style="max-width: 1000px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 4rem; align-items: center; justify-content: center;">
+          <div style="flex: 1 1 250px; display: flex; justify-content: center;">
+            <img src="Fotos/Jaime photo.jpeg" alt="Jaime Marin" style="width: 100%; max-width: 350px; border-radius: 8px; object-fit: cover;">
+          </div>
+          <div style="flex: 2 1 400px;">
+            <p class="text-label editable" data-editable="text">Biography</p>
+            <p class="text-body editable" data-editable="source" style="font-size: 1.1rem; line-height: 1.7; margin-bottom: 0;">I am a Colombian photographer based in Toronto,
+              specializing in fashion, beauty, and product photography. My work blends a clean commercial style with a
+              strong sense of storytelling, influenced by my early passion for nature and wildlife imagery. I focus on
+              creating modern, expressive visuals that help people and brands stand out.
+              <br><br>
+              Along with my commercial work, I also photograph portraits and special events, bringing the same attention to
+              detail, lighting, and direction to every project. I volunteer my photography skills to local animal rescues as
+              well, supporting their efforts to help animals find safe and loving homes.
+              <br><br>
+              Clients describe me as reliable and easy to work with. I have a strong understanding of lighting, experience
+              in retouching and post‑production, and I’m comfortable directing models and talent to bring out natural,
+              confident performances. On set, I’m a creative problem‑solver who adapts quickly and keeps the process smooth
+              from start to finish.
+              <br><br>
+              I work in both English and Spanish and enjoy collaborating with clients from different cultures and
+              industries, whether in studio or on location.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12 · Contact -->
+    <div id="slide-12" class="slide slide-text" data-index="12">
+      <div class="text-inner">
+        <p class="text-label editable" data-editable="text">Contact</p>
+        <p class="text-body editable" data-editable="source">For project inquiries, exhibitions, or editorial
+          commissions:</p>
+
+        <div class="contact-methods" style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem;">
+
+          <!-- Contact Name -->
+          <div style="display: flex; align-items: center; gap: 1rem; color: var(--text);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.7;">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span style="font-size: 1.2rem; font-weight: 400;">Jaime Marin</span>
+          </div>
+
+          <!-- Email -->
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.7;">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <a href="mailto:jaimeafotos@gmail.com" class="contact-link"
+              style="margin: 0; padding-bottom: 2px; font-size: clamp(1.2rem, 3vw, 1.8rem);">jaimeafotos@gmail.com</a>
+          </div>
+
+          <!-- Instagram -->
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.7;">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+            <a href="https://instagram.com/jaimeaphotos" target="_blank" class="contact-link"
+              style="margin: 0; padding-bottom: 2px; font-size: clamp(1.2rem, 3vw, 1.8rem);">jaimeaphotos</a>
+          </div>
+
+          <!-- LinkedIn -->
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.7;">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+              <rect x="2" y="9" width="4" height="12"></rect>
+              <circle cx="4" cy="4" r="2"></circle>
+            </svg>
+            <a href="https://www.linkedin.com/in/jaime-marin" target="_blank" class="contact-link"
+              style="margin: 0; padding-bottom: 2px; font-size: clamp(1.2rem, 3vw, 1.8rem);">Jaime Marin | LinkedIn</a>
+          </div>
+
+        </div>
+
+        <p class="editable" data-editable="text"
+          style="margin-top:3rem;font-family:'Josefin Sans',sans-serif;font-size:.62rem;letter-spacing:.15em;color:var(--muted);">
+          © 2026 Jaime Marín</p>
+      </div>
+    </div>
+
+  </div><!-- /gallery -->
+
+  <!-- Project overlay 1 -->
+  <div class="project-overlay" id="project-1">
+    <div class="overlay-bar"></div>
+    <div class="overlay-header">
+      <div class="overlay-meta">
+        <span class="overlay-tag">Photography</span>
+        <h2 class="overlay-title">Fashion</h2>
+        <span class="overlay-year">2026</span>
+      </div>
+      <a href="#_" class="overlay-close" aria-label="Close" style="text-decoration:none;">
+        <span></span><span></span>
+      </a>
+    </div>
+    <div class="overlay-body">
+      <div class="overlay-statement">
+        <p class="statement-text">Fashion shoots from various campaigns.</p>
+        <div class="statement-hint">
+          <div class="statement-hint-line"></div>
+          <span>Scroll to view photos</span>
+        </div>
+      </div>
+      <div class="overlay-photos">
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Fashion/Image8web.jpg"
+            alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Fashion/Image9web.jpg"
+            alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Fashion/_Image12web.jpg"
+            alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Project overlay 2 -->
+  <div class="project-overlay" id="project-2">
+    <div class="overlay-bar"></div>
+    <div class="overlay-header">
+      <div class="overlay-meta">
+        <span class="overlay-tag">Commercial</span>
+        <h2 class="overlay-title">Product</h2>
+        <span class="overlay-year">2026</span>
+      </div>
+      <a href="#_" class="overlay-close" aria-label="Close" style="text-decoration:none;">
+        <span></span><span></span>
+      </a>
+    </div>
+    <div class="overlay-body">
+      <div class="overlay-statement">
+        <p class="statement-text">Commercial product work featuring independent studios and fashion labels.</p>
+        <div class="statement-hint">
+          <div class="statement-hint-line"></div>
+          <span>Scroll to view photos</span>
+        </div>
+      </div>
+      <div class="overlay-photos">
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Product/Image16web.jpg"
+            alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Product/_Image14web.jpg"
+            alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Product/_Image18web.jpg"
+            alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Product/image17web.jpg"
+            alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Project overlay 3 -->
+  <div class="project-overlay" id="project-3">
+    <div class="overlay-bar"></div>
+    <div class="overlay-header">
+      <div class="overlay-meta">
+        <span class="overlay-tag">Portrait Photography</span>
+        <h2 class="overlay-title">Portrait 1</h2>
+        <span class="overlay-year">2026</span>
+      </div>
+      <a href="#_" class="overlay-close" aria-label="Close" style="text-decoration:none;">
+        <span></span><span></span>
+      </a>
+    </div>
+    <div class="overlay-body">
+      <div class="overlay-statement">
+        <p class="statement-text">Portraits exploring identity and how people choose to be seen.</p>
+        <div class="statement-hint">
+          <div class="statement-hint-line"></div>
+          <span>Scroll to view photos</span>
+        </div>
+      </div>
+      <div class="overlay-photos">
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img
+            src="Fotos/Protrait 1/Image7web.jpg" alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Protrait 1/image6.jpg"
+            alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Project overlay 4 -->
+  <div class="project-overlay" id="project-4">
+    <div class="overlay-bar"></div>
+    <div class="overlay-header">
+      <div class="overlay-meta">
+        <span class="overlay-tag">Portfolio</span>
+        <h2 class="overlay-title">Editorial</h2>
+        <span class="overlay-year">2026</span>
+      </div>
+      <a href="#_" class="overlay-close" aria-label="Close" style="text-decoration:none;">
+        <span></span><span></span>
+      </a>
+    </div>
+    <div class="overlay-body">
+      <div class="overlay-statement">
+        <p class="statement-text">Single photo from the portfolio.</p>
+        <div class="statement-hint">
+          <div class="statement-hint-line"></div>
+          <span>Scroll to view photos</span>
+        </div>
+      </div>
+      <div class="overlay-photos">
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/_Image1Web.jpg" alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Project overlay 5 -->
+  <div class="project-overlay" id="project-5">
+    <div class="overlay-bar"></div>
+    <div class="overlay-header">
+      <div class="overlay-meta">
+        <span class="overlay-tag">Portfolio</span>
+        <h2 class="overlay-title">Still Life</h2>
+        <span class="overlay-year">2026</span>
+      </div>
+      <a href="#_" class="overlay-close" aria-label="Close" style="text-decoration:none;">
+        <span></span><span></span>
+      </a>
+    </div>
+    <div class="overlay-body">
+      <div class="overlay-statement">
+        <p class="statement-text">Single photo from the portfolio.</p>
+        <div class="statement-hint">
+          <div class="statement-hint-line"></div>
+          <span>Scroll to view photos</span>
+        </div>
+      </div>
+      <div class="overlay-photos">
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/_Image3Web.jpg" alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Project overlay 6 -->
+  <div class="project-overlay" id="project-6">
+    <div class="overlay-bar"></div>
+    <div class="overlay-header">
+      <div class="overlay-meta">
+        <span class="overlay-tag">Portfolio</span>
+        <h2 class="overlay-title">Urban Focus</h2>
+        <span class="overlay-year">2026</span>
+      </div>
+      <a href="#_" class="overlay-close" aria-label="Close" style="text-decoration:none;">
+        <span></span><span></span>
+      </a>
+    </div>
+    <div class="overlay-body">
+      <div class="overlay-statement">
+        <p class="statement-text">Single photo from the portfolio.</p>
+        <div class="statement-hint">
+          <div class="statement-hint-line"></div>
+          <span>Scroll to view photos</span>
+        </div>
+      </div>
+      <div class="overlay-photos">
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Imagen4Web.jpg" alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Project overlay 7 -->
+  <div class="project-overlay" id="project-7">
+    <div class="overlay-bar"></div>
+    <div class="overlay-header">
+      <div class="overlay-meta">
+        <span class="overlay-tag">Portfolio</span>
+        <h2 class="overlay-title">Studio Session</h2>
+        <span class="overlay-year">2026</span>
+      </div>
+      <a href="#_" class="overlay-close" aria-label="Close" style="text-decoration:none;">
+        <span></span><span></span>
+      </a>
+    </div>
+    <div class="overlay-body">
+      <div class="overlay-statement">
+        <p class="statement-text">Single photo from the portfolio.</p>
+        <div class="statement-hint">
+          <div class="statement-hint-line"></div>
+          <span>Scroll to view photos</span>
+        </div>
+      </div>
+      <div class="overlay-photos">
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Image11web.jpg" alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Project overlay 8 -->
+  <div class="project-overlay" id="project-8">
+    <div class="overlay-bar"></div>
+    <div class="overlay-header">
+      <div class="overlay-meta">
+        <span class="overlay-tag">Portfolio</span>
+        <h2 class="overlay-title">Vivid Neon</h2>
+        <span class="overlay-year">2026</span>
+      </div>
+      <a href="#_" class="overlay-close" aria-label="Close" style="text-decoration:none;">
+        <span></span><span></span>
+      </a>
+    </div>
+    <div class="overlay-body">
+      <div class="overlay-statement">
+        <p class="statement-text">Single photo from the portfolio.</p>
+        <div class="statement-hint">
+          <div class="statement-hint-line"></div>
+          <span>Scroll to view photos</span>
+        </div>
+      </div>
+      <div class="overlay-photos">
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/_Image13web.jpg" alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Project overlay 9 -->
+  <div class="project-overlay" id="project-9">
+    <div class="overlay-bar"></div>
+    <div class="overlay-header">
+      <div class="overlay-meta">
+        <span class="overlay-tag">Portfolio</span>
+        <h2 class="overlay-title">Golden Hour</h2>
+        <span class="overlay-year">2026</span>
+      </div>
+      <a href="#_" class="overlay-close" aria-label="Close" style="text-decoration:none;">
+        <span></span><span></span>
+      </a>
+    </div>
+    <div class="overlay-body">
+      <div class="overlay-statement">
+        <p class="statement-text">Single photo from the portfolio.</p>
+        <div class="statement-hint">
+          <div class="statement-hint-line"></div>
+          <span>Scroll to view photos</span>
+        </div>
+      </div>
+      <div class="overlay-photos">
+        <div class="overlay-photo visible" style="opacity: 1; transform: none;"><img src="Fotos/Image15web.jpg" alt=""
+            style="max-height:85vh;max-width:100%;width:auto;display:block;margin:0 auto;border-radius:1px;object-fit:contain;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</body>
+
+</html>
